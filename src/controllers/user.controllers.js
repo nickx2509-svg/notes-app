@@ -2,9 +2,10 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js'
 import { ApiResponse } from '../utils/ApiResponse.js'
 import { User } from '../models/user.models.js'
+import jwt from 'jsonwebtoken'
 
 const registerUser = asyncHandler(async(req,res) => {
-  const {username,email,password} = req.body
+  let {username,email,password} = req.body
   
   if(!username || !email || !password){
     throw new ApiError(400,"All fileds are required")
@@ -66,9 +67,11 @@ const loginUser = asyncHandler(async(req,res) => {
   const loggedUser = await User.findById(user._id).select("-password -refreshToken")
 
   const options = {
-    httpOnly:true,
-    secure:true
-  }
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax"
+};
+
 
   return res
   .status(200)
@@ -101,25 +104,87 @@ const logoutUser = asyncHandler(async(req,res) => {
   )
 
   const options = {
-    httpOnly:true,
-    secure:true
-  }
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax"
+};
+
   return res
+  
   .status(200)
   .clearCookie("refreshToken",options)
   .json(
     200,
     "User logout successfully",
-    null
+    null,
+
 
   )
 
-  console.log(req.headers);
 
+
+})
+
+const refreshAccessToken = asyncHandler(async(req,res) => {
+  //  read refreshToken from cookie
+  // if refreshToken missing throw error
+  // verify refreshToken by JWT
+  // Find user in DB
+  // match Token with DB
+  // generate new AccessToken
+  // send response
+
+  const refreshToken = req.cookies?.refreshToken;
+
+  console.log("HEADERS:", req.headers.cookie);
+  console.log("COOKIES:", req.cookies)
+  console.log("REFRESH SECRET:", process.env.REFRESH_TOKEN_SECRET); console.log("TOKEN:", refreshToken);
+
+
+
+  if(!refreshToken){
+    throw new ApiError(401,"refresh Token is missing")
+  }
+
+  // verify by JWT
+  let decoded;
+  try {
+    decoded = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    )
+    
+  } catch (error) {
+    throw new ApiError(404,"invalid or expire refreshToken")
+  }
+
+  // FIND USER IN DB
+  const user = await User.findById(decoded._id).select("+refreshToken")
+
+  if(!user){
+    throw new ApiError(401,"user not found")
+  }
+
+  // compare with DB
+
+  if(user.refreshToken !== refreshToken){
+    throw new ApiError(401,"refreshToken doesn't match")
+  }
+
+  const newAccessToken = user.generateAccessToken();
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      { accessToken: newAccessToken},
+      "AccessToken refresh"
+    )
+  )
 })
 
 export {
   registerUser,
   loginUser,
-  logoutUser
+  logoutUser,
+  refreshAccessToken
 }

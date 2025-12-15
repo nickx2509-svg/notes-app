@@ -23,7 +23,11 @@ app.use(cookieParser());
 // router routes
 import { router } from "./routes/user.routes.js";
 
+import { noteRouter } from "./routes/note.routes.js"
+
 
 app.use('/api/v1/user',router)
+
+app.use('/api/v1/note',noteRouter)
 
 export { app };

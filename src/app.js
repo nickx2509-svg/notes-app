@@ -30,4 +30,10 @@ app.use('/api/v1/user',router)
 
 app.use('/api/v1/note',noteRouter)
 
+import { errorHandler } from "./middlewares/errors.middlewares.js"
+
+// routes above this line
+app.use(errorHandler);
+
+
 export { app };

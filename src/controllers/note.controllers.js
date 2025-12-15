@@ -15,7 +15,7 @@ const createNote = asyncHandler(async(req,res) => {
   const {title,content} = req.body
 
   if(!title || !content){
-    throw new ApiError(404,"All fileds are required")
+    throw new ApiError(400,"All fileds are required")
   }
 
   const userId = req.user._id
@@ -156,7 +156,10 @@ return res.status(200).json(
 
 const deleteNote = asyncHandler(async(req,res) => {
   const { noteId } = req.params;
-  const userId = req.body;
+  const userId = req.user._id
+
+  console.log("USER: " ,req.user)
+
 
   // validate note
   if(!mongoose.Types.ObjectId.isValid(noteId)){
@@ -175,12 +178,13 @@ const deleteNote = asyncHandler(async(req,res) => {
     throw new ApiError(403,"You are not allow")
   }
   // delete note
-  await Note.deleteOne();
+  await note.deleteOne()
   //send response
+  console.log("NOTE: " , note)
 
-  return res.status(200).json(
-    200,
-    note,
+  return res.status(201).json(
+    201,
+    null,
     "Note deleted successfully"
   )
 })

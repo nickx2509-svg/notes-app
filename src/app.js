@@ -19,10 +19,11 @@ app.use(express.urlencoded({ extended: true, limit }));
 
 app.use(cookieParser());
 
-app.get("/", (req, res) => {
-  res.status(200).json({
-    message: "Hello world"
-  });
-});
+
+// router routes
+import { router } from "./routes/user.routes.js";
+
+
+app.use('/api/v1/user',router)
 
 export { app };

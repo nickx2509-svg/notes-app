@@ -9,10 +9,24 @@ export const AuthProvider = ({ children }) => {
 
   // LOGIN
   const login = async (data) => {
-    setLoading(true)
-    const res = await api.post("/user/login", data)
-    setUser(res.data.data.user)
-    setLoading(false)
+    try {
+      setLoading(true)
+      const res = await api.post("/user/login", data)
+      setUser(res.data.data.user)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // REGISTER ✅
+  const register = async (data) => {
+    try {
+      setLoading(true)
+      const res = await api.post("/user/register", data)
+      setUser(res.data.data.user)
+    } finally {
+      setLoading(false)
+    }
   }
 
   // LOGOUT
@@ -22,7 +36,9 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider
+      value={{ user, login, register, logout, loading }}
+    >
       {children}
     </AuthContext.Provider>
   )
